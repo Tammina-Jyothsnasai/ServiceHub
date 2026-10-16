@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Requests - ServiceHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top px-3">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-white" href="dashboard.html">
+                <i class="bi bi-headset text-primary fs-4"></i> ServiceHub
+            </a>
+            <div class="d-flex align-items-center gap-3 ms-auto">
+                <a href="javascript:void(0)" onclick="openNotificationModal()" class="position-relative text-light fs-5 me-2" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                    <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.65rem;">0</span>
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle fs-5"></i>
+                        <span id="headerUserName">User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="AuthService.logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-sidebar p-0 sidebar">
+                <div class="py-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="dashboard.html"><i class="bi bi-grid-fill"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="create-request.html"><i class="bi bi-plus-circle-fill"></i> New Request</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="my-requests.html"><i class="bi bi-list-task"></i> My Requests</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="profile.html"><i class="bi bi-person-badge"></i> Profile</a>
+                        </li>
+                        <li class="nav-item mt-4">
+                            <a class="nav-link text-danger" href="#" onclick="AuthService.logout()"><i class="bi bi-box-arrow-left"></i> Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-md-9 col-lg-10 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1">My Service Requests</h4>
+                        <p class="text-muted small mb-0">Search, filter, and track all your logged resolution tickets</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-success rounded-pill px-3 shadow-sm fw-semibold btn-sm" onclick="exportMyRequestsCSV()">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                        </button>
+                        <a href="create-request.html" class="btn btn-primary rounded-pill px-4 shadow-sm fw-semibold btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i> New Request
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Status Filter Pills -->
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button class="filter-pill active" onclick="setStatusPill('ALL', this)">All (<span id="pillAll">0</span>)</button>
+                    <button class="filter-pill" onclick="setStatusPill('PENDING', this)">Pending (<span id="pillPending">0</span>)</button>
+                    <button class="filter-pill" onclick="setStatusPill('IN_PROGRESS', this)">In Progress (<span id="pillInProgress">0</span>)</button>
+                    <button class="filter-pill" onclick="setStatusPill('RESOLVED', this)">Resolved (<span id="pillResolved">0</span>)</button>
+                    <button class="filter-pill" onclick="setStatusPill('CLOSED', this)">Closed (<span id="pillClosed">0</span>)</button>
+                </div>
+
+                <!-- Search & Filters Toolbar -->
+                <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Search ticket ID or title...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="statusFilter" class="form-select">
+                                <option value="ALL">All Statuses</option>
+                                <option value="PENDING">PENDING</option>
+                                <option value="ASSIGNED">ASSIGNED</option>
+                                <option value="IN_PROGRESS">IN PROGRESS</option>
+                                <option value="RESOLVED">RESOLVED</option>
+                                <option value="CLOSED">CLOSED</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="priorityFilter" class="form-select">
+                                <option value="ALL">All Priorities</option>
+                                <option value="LOW">LOW</option>
+                                <option value="MEDIUM">MEDIUM</option>
+                                <option value="HIGH">HIGH</option>
+                                <option value="URGENT">URGENT</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="categoryFilter" class="form-select">
+                                <option value="ALL">All Categories</option>
+                                <option value="ELECTRICAL">Electrical</option>
+                                <option value="INTERNET">Internet</option>
+                                <option value="PLUMBING">Plumbing</option>
+                                <option value="CLEANING">Cleaning</option>
+                                <option value="MAINTENANCE">Maintenance</option>
+                                <option value="COMPUTER_IT">IT Hardware</option>
+                                <option value="FURNITURE">Furniture</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Card Container -->
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Ticket ID</th>
+                                        <th>Title</th>
+                                        <th>Category</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Created Date</th>
+                                        <th class="text-end pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="myRequestsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">Loading requests...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        AuthService.requireAuth('USER');
+        const currentUser = AuthService.getUser();
+        let allRequests = [];
+
+        async function loadMyRequests() {
+            try {
+                allRequests = await ApiClient.get(`/requests/user/${currentUser.id}`);
+                renderTable();
+            } catch (err) {
+                showToast(err.message || 'Error fetching requests', 'error');
+            }
+        }
+
+        function renderTable() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const status = document.getElementById('statusFilter').value;
+            const priority = document.getElementById('priorityFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+
+            const filtered = allRequests.filter(r => {
+                const matchSearch = r.ticketId.toLowerCase().includes(search) || r.title.toLowerCase().includes(search) || r.location.toLowerCase().includes(search);
+                const matchStatus = status === 'ALL' || r.status === status;
+                const matchPriority = priority === 'ALL' || r.priority === priority;
+                const matchCategory = category === 'ALL' || r.category === category;
+                return matchSearch && matchStatus && matchPriority && matchCategory;
+            });
+
+            const tbody = document.getElementById('myRequestsTableBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-search fs-1 d-block mb-2 text-secondary"></i>
+                            No requests found matching your filters.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(r => `
+                <tr>
+                    <td class="ps-4 fw-bold text-primary">${r.ticketId}</td>
+                    <td class="fw-semibold">${r.title}</td>
+                    <td><span class="badge bg-light text-dark border">${r.category}</span></td>
+                    <td>${getPriorityBadge(r.priority)}</td>
+                    <td>${getStatusBadge(r.status)}</td>
+                    <td class="small text-muted">${formatDate(r.createdAt)}</td>
+                    <td class="text-end pe-4">
+                        <a href="request-details.html?id=${r.id}" class="btn btn-sm btn-outline-primary rounded-pill">Track Status</a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', renderTable);
+        document.getElementById('statusFilter').addEventListener('change', renderTable);
+        document.getElementById('priorityFilter').addEventListener('change', renderTable);
+        document.getElementById('categoryFilter').addEventListener('change', renderTable);
+
+        loadMyRequests();
+    </script>
+</body>
+</html>

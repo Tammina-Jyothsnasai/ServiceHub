@@ -1,0 +1,19 @@
+# Compiled class files & build directories
+backend/target/
+target/
+*.class
+
+# Log files
+*.log
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS generated files
+.DS_Store
+Thumbs.db

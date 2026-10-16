@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Management - ServiceHub Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top px-3">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-white" href="admin-dashboard.html">
+                <i class="bi bi-headset text-primary fs-4"></i> ServiceHub <span class="badge bg-danger ms-2 small" style="font-size:0.65rem;">ADMIN PANEL</span>
+            </a>
+            <div class="d-flex align-items-center gap-3 ms-auto">
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-shield-lock-fill fs-5 text-warning"></i>
+                        <span id="headerUserName">Admin</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="AuthService.logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-sidebar p-0 sidebar">
+                <div class="py-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-dashboard.html"><i class="bi bi-grid-fill"></i> Admin Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-requests.html"><i class="bi bi-ticket-detailed-fill"></i> All Requests</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="admin-staff.html"><i class="bi bi-people-fill"></i> Manage Staff</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-users.html"><i class="bi bi-person-lines-fill"></i> Manage Users</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-feedback.html"><i class="bi bi-star-fill text-warning"></i> Feedback</a>
+                        </li>
+                        <li class="nav-item mt-4">
+                            <a class="nav-link text-danger" href="#" onclick="AuthService.logout()"><i class="bi bi-box-arrow-left"></i> Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-md-9 col-lg-10 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1">Technician & Staff Directory</h4>
+                        <p class="text-muted small mb-0">Register new staff members, edit details, and toggle active statuses</p>
+                    </div>
+                    <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-semibold" onclick="openAddStaffModal()">
+                        <i class="bi bi-person-plus-fill me-1"></i> Add Staff Member
+                    </button>
+                </div>
+
+                <!-- Staff Table -->
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Staff ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Department</th>
+                                        <th>Phone</th>
+                                        <th>Status</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="staffTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">Loading staff list...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Staff Modal -->
+    <div class="modal fade" id="staffModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="staffModalTitle">Add Staff Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="staffForm">
+                    <div class="modal-body py-4">
+                        <input type="hidden" id="staffId">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Full Name *</label>
+                            <input type="text" id="staffName" class="form-control" placeholder="e.g. John Kumar" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Email Address *</label>
+                            <input type="email" id="staffEmail" class="form-control" placeholder="john.kumar@servicehub.com" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Department *</label>
+                            <select id="staffDepartment" class="form-select" required>
+                                <option value="IT">IT / Network</option>
+                                <option value="ELECTRICAL">Electrical</option>
+                                <option value="PLUMBING">Plumbing</option>
+                                <option value="MAINTENANCE">General Maintenance</option>
+                                <option value="CLEANING">Cleaning</option>
+                                <option value="SECURITY">Security</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Phone Number *</label>
+                            <input type="text" id="staffPhone" class="form-control" placeholder="+91 9876543210" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Status</label>
+                            <select id="staffStatus" class="form-select">
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="INACTIVE">INACTIVE</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="saveStaffBtn" class="btn btn-primary rounded-pill px-4 fw-bold">Save Staff</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        AuthService.requireAuth('ADMIN');
+
+        let staffList = [];
+
+        async function loadStaff() {
+            try {
+                staffList = await ApiClient.get('/staff');
+                renderStaffTable();
+            } catch (err) {
+                showToast(err.message || 'Error loading staff', 'error');
+            }
+        }
+
+        function renderStaffTable() {
+            const tbody = document.getElementById('staffTableBody');
+            if (staffList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No staff members found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = staffList.map(s => `
+                <tr>
+                    <td class="ps-4 font-monospace small">#${s.id}</td>
+                    <td class="fw-semibold">${s.name}</td>
+                    <td class="small text-muted">${s.email}</td>
+                    <td><span class="badge bg-primary-subtle text-primary border">${s.department}</span></td>
+                    <td class="small font-monospace">${s.phone}</td>
+                    <td>
+                        <span class="badge ${s.status === 'ACTIVE' ? 'bg-success' : 'bg-secondary'}">${s.status}</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill me-1" onclick="openEditStaffModal(${s.id})">Edit</button>
+                        ${s.status === 'ACTIVE' ? 
+                            `<button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deactivateStaff(${s.id})">Deactivate</button>` : ''
+                        }
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openAddStaffModal() {
+            document.getElementById('staffId').value = '';
+            document.getElementById('staffModalTitle').textContent = 'Add Staff Member';
+            document.getElementById('staffForm').reset();
+            document.getElementById('staffEmail').disabled = false;
+
+            const modal = new bootstrap.Modal(document.getElementById('staffModal'));
+            modal.show();
+        }
+
+        function openEditStaffModal(id) {
+            const staff = staffList.find(s => s.id === id);
+            if (!staff) return;
+
+            document.getElementById('staffId').value = staff.id;
+            document.getElementById('staffModalTitle').textContent = 'Edit Staff Member';
+            document.getElementById('staffName').value = staff.name;
+            document.getElementById('staffEmail').value = staff.email;
+            document.getElementById('staffEmail').disabled = true;
+            document.getElementById('staffDepartment').value = staff.department;
+            document.getElementById('staffPhone').value = staff.phone;
+            document.getElementById('staffStatus').value = staff.status;
+
+            const modal = new bootstrap.Modal(document.getElementById('staffModal'));
+            modal.show();
+        }
+
+        document.getElementById('staffForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('staffId').value;
+            const name = document.getElementById('staffName').value.trim();
+            const email = document.getElementById('staffEmail').value.trim();
+            const department = document.getElementById('staffDepartment').value;
+            const phone = document.getElementById('staffPhone').value.trim();
+            const status = document.getElementById('staffStatus').value;
+
+            try {
+                if (id) {
+                    await ApiClient.put(`/staff/${id}`, { name, email, department, phone, status });
+                    showToast('Staff updated successfully!', 'success');
+                } else {
+                    await ApiClient.post('/staff', { name, email, department, phone, status });
+                    showToast('Staff added successfully!', 'success');
+                }
+                bootstrap.Modal.getInstance(document.getElementById('staffModal')).hide();
+                loadStaff();
+            } catch (err) {
+                showToast(err.message || 'Operation failed', 'error');
+            }
+        });
+
+        async function deactivateStaff(id) {
+            if (confirm('Deactivate this staff member?')) {
+                try {
+                    await ApiClient.delete(`/staff/${id}`);
+                    showToast('Staff deactivated', 'info');
+                    loadStaff();
+                } catch (err) {
+                    showToast(err.message || 'Deactivation failed', 'error');
+                }
+            }
+        }
+
+        loadStaff();
+    </script>
+</body>
+</html>

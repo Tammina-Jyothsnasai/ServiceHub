@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Details - ServiceHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top px-3">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-white" href="dashboard.html">
+                <i class="bi bi-headset text-primary fs-4"></i> ServiceHub
+            </a>
+            <div class="d-flex align-items-center gap-3 ms-auto">
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle fs-5"></i>
+                        <span id="headerUserName">User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="AuthService.logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-sidebar p-0 sidebar">
+                <div class="py-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="dashboard.html"><i class="bi bi-grid-fill"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="create-request.html"><i class="bi bi-plus-circle-fill"></i> New Request</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="my-requests.html"><i class="bi bi-list-task"></i> My Requests</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="profile.html"><i class="bi bi-person-badge"></i> Profile</a>
+                        </li>
+                        <li class="nav-item mt-4">
+                            <a class="nav-link text-danger" href="#" onclick="AuthService.logout()"><i class="bi bi-box-arrow-left"></i> Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-md-9 col-lg-10 p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="my-requests.html" class="btn btn-outline-secondary rounded-circle btn-sm"><i class="bi bi-arrow-left"></i></a>
+                        <div>
+                            <h4 class="fw-bold mb-0" id="ticketHeaderTitle">Request Details</h4>
+                            <span class="text-muted small" id="ticketHeaderSub">Ticket ID: Loading...</span>
+                        </div>
+                    </div>
+                    <div id="statusBadgeContainer"></div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Left Side: Issue Details & Timeline -->
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-info-circle text-primary me-2"></i> Ticket Information</h6>
+                            <h5 class="fw-bold text-primary mb-2" id="reqTitle">-</h5>
+                            <p class="text-dark mb-4" id="reqDescription">-</p>
+
+                            <div class="row g-3 p-3 bg-light rounded-3 border">
+                                <div class="col-6 col-md-3">
+                                    <small class="text-muted d-block">Category</small>
+                                    <span class="fw-semibold" id="reqCategory">-</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <small class="text-muted d-block">Priority</small>
+                                    <span id="reqPriority">-</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <small class="text-muted d-block">Location / Room</small>
+                                    <span class="fw-semibold" id="reqLocation">-</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <small class="text-muted d-block">Logged Date</small>
+                                    <span class="small font-monospace" id="reqCreatedAt">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visual Status Timeline Stepper -->
+                        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                            <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-signpost-split text-primary me-2"></i> Resolution Timeline Stepper</h6>
+                            <div class="timeline" id="timelineContainer">
+                                <div class="timeline-item" id="stepCreated">
+                                    <div class="timeline-icon"><i class="bi bi-file-earmark-plus"></i></div>
+                                    <h6 class="fw-bold mb-1">Ticket Created</h6>
+                                    <p class="text-muted small mb-0">Service request successfully registered in MySQL database.</p>
+                                </div>
+                                <div class="timeline-item" id="stepPending">
+                                    <div class="timeline-icon"><i class="bi bi-clock"></i></div>
+                                    <h6 class="fw-bold mb-1">Pending Review</h6>
+                                    <p class="text-muted small mb-0">Awaiting admin review and staff assignment.</p>
+                                </div>
+                                <div class="timeline-item" id="stepAssigned">
+                                    <div class="timeline-icon"><i class="bi bi-person-check"></i></div>
+                                    <h6 class="fw-bold mb-1">Assigned to Technician</h6>
+                                    <p class="text-muted small mb-0" id="assignedTimelineText">Waiting for staff assignment...</p>
+                                </div>
+                                <div class="timeline-item" id="stepInProgress">
+                                    <div class="timeline-icon"><i class="bi bi-gear-wide-connected"></i></div>
+                                    <h6 class="fw-bold mb-1">In Progress</h6>
+                                    <p class="text-muted small mb-0">Technician is actively working on resolving the reported issue.</p>
+                                </div>
+                                <div class="timeline-item" id="stepResolved">
+                                    <div class="timeline-icon"><i class="bi bi-check-circle"></i></div>
+                                    <h6 class="fw-bold mb-1">Resolved</h6>
+                                    <p class="text-muted small mb-0" id="resolvedTimelineText">Issue fix completed.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feedback Section Card -->
+                        <div class="card border-0 shadow-sm rounded-4 p-4 d-none" id="feedbackCard">
+                            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-star text-warning me-2"></i> Customer Service Feedback</h6>
+                            <div id="existingFeedbackContent" class="d-none">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="text-warning fs-5" id="existingStars"></div>
+                                        <span class="fw-bold" id="existingRatingText">5/5 Stars</span>
+                                    </div>
+                                    <p class="text-dark mb-0 fst-italic" id="existingComment">"Great service!"</p>
+                                </div>
+                            </div>
+
+                            <form id="feedbackForm" class="d-none">
+                                <p class="text-muted small mb-3">Your request has been resolved! Please rate your satisfaction:</p>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Rating *</label>
+                                    <div class="star-rating mb-2" id="starRatingSelect">
+                                        <i class="bi bi-star-fill active" data-rating="1"></i>
+                                        <i class="bi bi-star-fill active" data-rating="2"></i>
+                                        <i class="bi bi-star-fill active" data-rating="3"></i>
+                                        <i class="bi bi-star-fill active" data-rating="4"></i>
+                                        <i class="bi bi-star-fill active" data-rating="5"></i>
+                                    </div>
+                                    <input type="hidden" id="ratingValue" value="5">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Comments / Suggestions</label>
+                                    <textarea id="feedbackComment" class="form-control" rows="3" placeholder="How was the resolution experience?"></textarea>
+                                </div>
+                                <button type="submit" id="submitFeedbackBtn" class="btn btn-primary rounded-pill px-4 fw-bold">
+                                    Submit Feedback
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Right Side: Assigned Staff & Resolution Notes -->
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-person-badge text-primary me-2"></i> Assigned Technician</h6>
+                            <div id="assignedStaffBox">
+                                <p class="text-muted small">No staff assigned yet.</p>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-4 p-4">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-journal-check text-primary me-2"></i> Resolution Notes</h6>
+                            <div id="resolutionNotesBox">
+                                <p class="text-muted small">No notes uploaded yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        AuthService.requireAuth();
+        const currentUser = AuthService.getUser();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestId = urlParams.get('id');
+
+        if (!requestId) {
+            window.location.href = 'my-requests.html';
+        }
+
+        let currentRequest = null;
+
+        async function loadRequestDetails() {
+            try {
+                currentRequest = await ApiClient.get(`/requests/${requestId}`);
+
+                document.getElementById('ticketHeaderTitle').textContent = currentRequest.title;
+                document.getElementById('ticketHeaderSub').textContent = `Ticket ID: ${currentRequest.ticketId}`;
+                document.getElementById('statusBadgeContainer').innerHTML = getStatusBadge(currentRequest.status);
+
+                document.getElementById('reqTitle').textContent = currentRequest.title;
+                document.getElementById('reqDescription').textContent = currentRequest.description;
+                document.getElementById('reqCategory').textContent = currentRequest.category;
+                document.getElementById('reqPriority').innerHTML = getPriorityBadge(currentRequest.priority);
+                document.getElementById('reqLocation').textContent = currentRequest.location;
+                document.getElementById('reqCreatedAt').textContent = formatDate(currentRequest.createdAt);
+
+                // Render Timeline Stepper
+                updateTimeline(currentRequest);
+
+                // Render Staff Info
+                const staffBox = document.getElementById('assignedStaffBox');
+                if (currentRequest.assignedStaffName) {
+                    staffBox.innerHTML = `
+                        <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border">
+                            <div class="stat-icon icon-progress"><i class="bi bi-person-fill"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-0">${currentRequest.assignedStaffName}</h6>
+                                <span class="badge bg-primary-subtle text-primary border">${currentRequest.assignedStaffDepartment}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    staffBox.innerHTML = `<p class="text-muted small mb-0">No technician assigned yet. Admin will assign soon.</p>`;
+                }
+
+                // Render Resolution Notes
+                const resNotesBox = document.getElementById('resolutionNotesBox');
+                if (currentRequest.resolutionNotes) {
+                    resNotesBox.innerHTML = `
+                        <div class="p-3 bg-success-subtle text-success-emphasis rounded-3 border border-success-subtle">
+                            <small class="fw-bold d-block mb-1"><i class="bi bi-check2-square"></i> Work Notes:</small>
+                            ${currentRequest.resolutionNotes}
+                        </div>
+                    `;
+                } else {
+                    resNotesBox.innerHTML = `<p class="text-muted small mb-0">Resolution notes will be uploaded when technician completes work.</p>`;
+                }
+
+                // Feedback Check if status is RESOLVED or CLOSED
+                if (currentRequest.status === 'RESOLVED' || currentRequest.status === 'CLOSED') {
+                    document.getElementById('feedbackCard').classList.remove('d-none');
+                    loadFeedback();
+                }
+
+            } catch (err) {
+                showToast(err.message || 'Failed to load request details', 'error');
+            }
+        }
+
+        function updateTimeline(req) {
+            const status = req.status;
+            const steps = ['stepCreated', 'stepPending', 'stepAssigned', 'stepInProgress', 'stepResolved'];
+            
+            // Default reset
+            steps.forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('active', 'completed');
+            });
+
+            document.getElementById('stepCreated').classList.add('completed');
+
+            if (status === 'PENDING') {
+                document.getElementById('stepPending').classList.add('active');
+            } else if (status === 'ASSIGNED') {
+                document.getElementById('stepPending').classList.add('completed');
+                document.getElementById('stepAssigned').classList.add('active');
+                if (req.assignedStaffName) {
+                    document.getElementById('assignedTimelineText').textContent = `Assigned to ${req.assignedStaffName} (${req.assignedStaffDepartment}).`;
+                }
+            } else if (status === 'IN_PROGRESS') {
+                document.getElementById('stepPending').classList.add('completed');
+                document.getElementById('stepAssigned').classList.add('completed');
+                document.getElementById('stepInProgress').classList.add('active');
+            } else if (status === 'RESOLVED' || status === 'CLOSED') {
+                document.getElementById('stepPending').classList.add('completed');
+                document.getElementById('stepAssigned').classList.add('completed');
+                document.getElementById('stepInProgress').classList.add('completed');
+                document.getElementById('stepResolved').classList.add('completed');
+                if (req.resolvedAt) {
+                    document.getElementById('resolvedTimelineText').textContent = `Resolved on ${formatDate(req.resolvedAt)}`;
+                }
+            }
+        }
+
+        async function loadFeedback() {
+            try {
+                const fb = await ApiClient.get(`/feedback/request/${requestId}`);
+                if (fb && fb.id) {
+                    // Feedback exists
+                    document.getElementById('existingFeedbackContent').classList.remove('d-none');
+                    document.getElementById('existingRatingText').textContent = `${fb.rating}/5 Stars`;
+                    document.getElementById('existingComment').textContent = `"${fb.comment || 'No comment written'}"`;
+
+                    let starsHtml = '';
+                    for (let i = 1; i <= 5; i++) {
+                        if (i <= fb.rating) starsHtml += '<i class="bi bi-star-fill me-1"></i>';
+                        else starsHtml += '<i class="bi bi-star me-1 text-muted"></i>';
+                    }
+                    document.getElementById('existingStars').innerHTML = starsHtml;
+                } else {
+                    // Show form only if request belongs to current user
+                    if (currentRequest.userId === currentUser.id) {
+                        document.getElementById('feedbackForm').classList.remove('d-none');
+                    }
+                }
+            } catch (err) {
+                console.log('Feedback load error', err);
+            }
+        }
+
+        // Star Rating Selection
+        const stars = document.querySelectorAll('#starRatingSelect i');
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.getAttribute('data-rating'));
+                document.getElementById('ratingValue').value = rating;
+
+                stars.forEach((s, idx) => {
+                    if (idx < rating) s.classList.add('active');
+                    else s.classList.remove('active');
+                });
+            });
+        });
+
+        // Submit Feedback
+        document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const rating = parseInt(document.getElementById('ratingValue').value);
+            const comment = document.getElementById('feedbackComment').value.trim();
+
+            try {
+                await ApiClient.post(`/feedback?userId=${currentUser.id}`, {
+                    requestId: currentRequest.id,
+                    rating, comment
+                });
+                showToast('Thank you! Feedback submitted successfully.', 'success');
+                setTimeout(() => location.reload(), 800);
+            } catch (err) {
+                showToast(err.message || 'Failed to submit feedback', 'error');
+            }
+        });
+
+        loadRequestDetails();
+    </script>
+</body>
+</html>

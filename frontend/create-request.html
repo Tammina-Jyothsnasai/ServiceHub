@@ -1,0 +1,471 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Service Request - ServiceHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top px-3">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-white" id="brandHomeLink" href="dashboard.html">
+                <i class="bi bi-headset text-primary fs-4"></i> ServiceHub
+            </a>
+            <div class="d-flex align-items-center gap-3 ms-auto">
+                <a href="javascript:void(0)" onclick="openNotificationModal()" class="position-relative text-light fs-5 me-2" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                    <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.65rem;">0</span>
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle fs-5"></i>
+                        <span id="headerUserName">User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <li><span class="dropdown-item-text text-muted small" id="headerUserRole">USER</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="AuthService.logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Dynamic Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-sidebar p-0 sidebar">
+                <div class="py-3">
+                    <ul class="nav flex-column" id="sidebarNav">
+                        <!-- Populated by JS based on user role -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-md-9 col-lg-10 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1">Create Service Request</h4>
+                        <p class="text-muted small mb-0">Fill in the details below or select a quick preset template to open a new resolution ticket</p>
+                    </div>
+                    <a href="javascript:void(0)" id="backBtn" class="btn btn-outline-secondary rounded-pill px-3 btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                </div>
+
+                <!-- 1-Click Quick Issue Presets -->
+                <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="form-label fw-bold small text-uppercase text-primary mb-0">
+                            <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Quick Issue Presets (Click to Auto-Fill)
+                        </label>
+                        <span class="text-muted small">Select any preset to populate form instantly</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm preset-btn rounded-pill" onclick="applyPreset('AC not cooling / blowing warm air', 'MAINTENANCE', 'The air conditioner in the room is blowing warm air and making unusual rattling noises. Requires inspection and gas refill.', 'HIGH')">
+                            ❄️ AC Not Cooling
+                        </button>
+                        <button type="button" class="btn btn-sm preset-btn rounded-pill" onclick="applyPreset('WiFi / LAN Internet disconnected', 'INTERNET', 'Internet connection has dropped completely. Unable to connect to campus network and router LED is blinking red.', 'HIGH')">
+                            📶 WiFi Disconnected
+                        </button>
+                        <button type="button" class="btn btn-sm preset-btn rounded-pill" onclick="applyPreset('Water pipe leak and bathroom flooding', 'PLUMBING', 'Severe water leakage from the washbasin pipe causing standing water on the floor. Please send a plumber urgently.', 'URGENT')">
+                            🚰 Water Pipe Leak
+                        </button>
+                        <button type="button" class="btn btn-sm preset-btn rounded-pill" onclick="applyPreset('Power socket sparking & circuit tripped', 'ELECTRICAL', 'Power outlet started sparking with burning smell and the main circuit breaker tripped.', 'URGENT')">
+                            ⚡ Electrical Spark / Trip
+                        </button>
+                        <button type="button" class="btn btn-sm preset-btn rounded-pill" onclick="applyPreset('Broken study table / chair hydraulic', 'FURNITURE', 'The office chair height adjustment cylinder is broken and one wheel caster has detached.', 'LOW')">
+                            🪑 Broken Chair / Furniture
+                        </button>
+                        <button type="button" class="btn btn-sm preset-btn rounded-pill" onclick="applyPreset('Room deep cleaning and trash disposal', 'CLEANING', 'Room floor cleaning, window dusting, and waste bin disposal requested.', 'LOW')">
+                            🧹 Room Cleaning Needed
+                        </button>
+                        <button type="button" class="btn btn-sm preset-btn rounded-pill" onclick="applyPreset('Lab projector display flickering', 'COMPUTER_IT', 'Projector HDMI connection is failing and display continuously flickers during presentations.', 'MEDIUM')">
+                            🖥️ Projector / IT Glitch
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm rounded-4 p-4">
+                            <form id="createRequestForm">
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Request Title *</label>
+                                    <input type="text" id="title" class="form-control form-control-lg fs-6" placeholder="e.g. AC in Room 204 is not cooling" required>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Category *</label>
+                                        <select id="category" class="form-select" required>
+                                            <option value="">Select Category</option>
+                                            <option value="ELECTRICAL">Electrical</option>
+                                            <option value="INTERNET">Internet / Network</option>
+                                            <option value="PLUMBING">Plumbing</option>
+                                            <option value="CLEANING">Cleaning</option>
+                                            <option value="MAINTENANCE">General Maintenance</option>
+                                            <option value="COMPUTER_IT">Computer / IT Hardware</option>
+                                            <option value="FURNITURE">Furniture</option>
+                                            <option value="OTHER">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Location / Room Number *</label>
+                                        <input type="text" id="location" class="form-control" placeholder="e.g. Hostel Block A - Room 204" required>
+                                        <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+                                            <small class="text-muted me-1" style="font-size:0.75rem;">Quick:</small>
+                                            <span class="badge bg-light text-dark border cursor-pointer" onclick="setLocation('Hostel Block A - Room 204')">Block A-204</span>
+                                            <span class="badge bg-light text-dark border cursor-pointer" onclick="setLocation('Hostel Block B - Room 310')">Block B-310</span>
+                                            <span class="badge bg-light text-dark border cursor-pointer" onclick="setLocation('Computer Lab 2 - 2nd Floor')">Lab 2</span>
+                                            <span class="badge bg-light text-dark border cursor-pointer" onclick="setLocation('Faculty Office - Room 105')">Office 105</span>
+                                            <span class="badge bg-light text-dark border cursor-pointer" onclick="setLocation('Library 1st Floor')">Library</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label fw-semibold mb-0">Description *</label>
+                                        <small class="text-muted" id="charCount">0 characters</small>
+                                    </div>
+                                    <textarea id="description" class="form-control" rows="4" placeholder="Describe the issue clearly (AI will suggest priority automatically as you type)..." required></textarea>
+
+                                    <!-- Automatic Priority Suggestion Banner -->
+                                    <div id="prioritySuggestionBox" class="alert alert-light border mt-3 p-3 rounded-3 d-none">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-cpu text-primary fs-3"></i>
+                                                <div>
+                                                    <span class="small text-muted d-block font-weight-medium">Smart AI Priority Suggestion</span>
+                                                    <span class="fw-bold" id="suggestedPriorityText">Suggested Priority: HIGH</span>
+                                                </div>
+                                            </div>
+                                            <button type="button" id="applySuggestedPriorityBtn" class="btn btn-sm btn-outline-primary rounded-pill fw-semibold">
+                                                Apply Suggested Priority
+                                            </button>
+                                        </div>
+                                        <small class="text-muted d-block mt-2" id="suggestionReasonText"></small>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Priority Level *</label>
+                                    <select id="priority" class="form-select" required>
+                                        <option value="LOW">LOW - Minor / Cosmetic issue</option>
+                                        <option value="MEDIUM" selected>MEDIUM - Standard issue</option>
+                                        <option value="HIGH">HIGH - Urgent operational issue</option>
+                                        <option value="URGENT">URGENT - Emergency / Safety hazard</option>
+                                    </select>
+                                    <small class="text-muted">You can manually change the priority level or use AI suggestions above.</small>
+                                </div>
+
+                                <!-- Photo / Attachment Upload Area -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Attach Photo / Screenshot <span class="text-muted small fw-normal">(Optional)</span></label>
+                                    <div class="border rounded-3 p-3 text-center bg-light" id="dropZone" style="cursor: pointer; border-style: dashed !important; border-width: 2px !important; border-color: #cbd5e1 !important;">
+                                        <input type="file" id="photoInput" class="d-none" accept="image/*">
+                                        <div id="dropZonePrompt">
+                                            <i class="bi bi-cloud-arrow-up text-primary fs-2 d-block mb-1"></i>
+                                            <span class="small fw-semibold d-block">Click to upload photo or drag & drop</span>
+                                            <span class="text-muted small" style="font-size: 0.75rem;">PNG, JPG, or JPEG up to 5MB</span>
+                                        </div>
+                                        <div id="previewContainer" class="d-none mt-2 position-relative d-inline-block">
+                                            <img id="imagePreview" src="" alt="Preview" class="rounded shadow-sm border" style="max-height: 120px; max-width: 100%;">
+                                            <button type="button" class="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-0 translate-middle shadow-sm" onclick="removeImage(event)" style="padding: 2px 7px;">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                            <div id="imageFileName" class="small text-muted mt-1 fw-semibold"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-3">
+                                    <button type="submit" id="submitBtn" class="btn btn-primary px-5 py-2 rounded-pill fw-bold shadow-sm">
+                                        <span id="btnSpinner" class="spinner-border spinner-border-sm d-none me-2"></span>
+                                        <span id="btnText">Submit Service Request</span>
+                                    </button>
+                                    <a href="javascript:void(0)" id="cancelBtn" class="btn btn-outline-secondary px-4 py-2 rounded-pill">Cancel</a>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar Guidelines -->
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i> How It Works</h6>
+                            <div class="d-flex gap-3 mb-3">
+                                <div class="text-primary fs-4"><i class="bi bi-1-circle-fill"></i></div>
+                                <div>
+                                    <strong class="d-block small">Submit Request</strong>
+                                    <span class="text-muted small">Choose category and location. Our AI categorizes urgency.</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3 mb-3">
+                                <div class="text-primary fs-4"><i class="bi bi-2-circle-fill"></i></div>
+                                <div>
+                                    <strong class="d-block small">Technician Assigned</strong>
+                                    <span class="text-muted small">Specialized staff is assigned directly by facility managers.</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <div class="text-primary fs-4"><i class="bi bi-3-circle-fill"></i></div>
+                                <div>
+                                    <strong class="d-block small">Live Updates & Resolution</strong>
+                                    <span class="text-muted small">Track progress on the stepper and rate our service upon completion.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-4 p-4 bg-primary-subtle text-primary border border-primary-subtle">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-headset fs-4"></i>
+                                <h6 class="fw-bold mb-0">Emergency Facility Helpline</h6>
+                            </div>
+                            <p class="small mb-2 text-dark">For life-threatening emergencies or gas leaks, please contact the round-the-clock emergency desk directly:</p>
+                            <a href="tel:+18005550199" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold">
+                                <i class="bi bi-telephone-fill me-1"></i> +1 (800) 555-0199
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Allow ANY authenticated user (USER or ADMIN)
+        AuthService.requireAuth();
+        const currentUser = AuthService.getUser();
+
+        // Render Dynamic Role-Based Sidebar and Links
+        const sidebarNav = document.getElementById('sidebarNav');
+        const homeLink = document.getElementById('brandHomeLink');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const backBtn = document.getElementById('backBtn');
+
+        const homeUrl = (currentUser && currentUser.role === 'ADMIN') ? 'admin-dashboard.html' : 'dashboard.html';
+        if (homeLink) homeLink.href = homeUrl;
+        if (cancelBtn) cancelBtn.href = homeUrl;
+        if (backBtn) backBtn.href = homeUrl;
+
+        if (currentUser && currentUser.role === 'ADMIN') {
+            sidebarNav.innerHTML = `
+                <li class="nav-item">
+                    <a class="nav-link" href="admin-dashboard.html"><i class="bi bi-grid-fill"></i> Admin Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="admin-requests.html"><i class="bi bi-ticket-detailed-fill"></i> All Requests</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="create-request.html"><i class="bi bi-plus-circle-fill"></i> New Request</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="admin-staff.html"><i class="bi bi-people-fill"></i> Manage Staff</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="admin-users.html"><i class="bi bi-person-lines-fill"></i> Manage Users</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="admin-feedback.html"><i class="bi bi-star-fill text-warning"></i> Feedback</a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="#" onclick="AuthService.logout()"><i class="bi bi-box-arrow-left"></i> Logout</a>
+                </li>
+            `;
+        } else {
+            sidebarNav.innerHTML = `
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html"><i class="bi bi-grid-fill"></i> Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="create-request.html"><i class="bi bi-plus-circle-fill"></i> New Request</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="my-requests.html"><i class="bi bi-list-task"></i> My Requests</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="profile.html"><i class="bi bi-person-badge"></i> Profile</a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="#" onclick="AuthService.logout()"><i class="bi bi-box-arrow-left"></i> Logout</a>
+                </li>
+            `;
+        }
+
+        // Quick Preset Filler
+        function applyPreset(title, category, desc, priority) {
+            document.getElementById('title').value = title;
+            document.getElementById('category').value = category;
+            document.getElementById('description').value = desc;
+            document.getElementById('priority').value = priority;
+            updateCharCount();
+
+            // Trigger AI suggestion analysis
+            analyzePriority(desc);
+            showToast(`Loaded "${title}" template!`, 'info');
+        }
+
+        function setLocation(loc) {
+            document.getElementById('location').value = loc;
+        }
+
+        function updateCharCount() {
+            const count = document.getElementById('description').value.length;
+            document.getElementById('charCount').textContent = `${count} characters`;
+        }
+
+        // Auto Priority Suggestion logic as user types description
+        let currentSuggestedPriority = null;
+        let debounceTimer = null;
+
+        function analyzePriority(text) {
+            if (text.length < 5) {
+                document.getElementById('prioritySuggestionBox').classList.add('d-none');
+                return;
+            }
+
+            ApiClient.post('/requests/suggest-priority', { description: text })
+                .then(res => {
+                    currentSuggestedPriority = res.suggestedPriority;
+                    const box = document.getElementById('prioritySuggestionBox');
+                    const textEl = document.getElementById('suggestedPriorityText');
+                    const reasonEl = document.getElementById('suggestionReasonText');
+
+                    textEl.innerHTML = `Suggested Priority: <span class="badge bg-primary ms-1">${res.suggestedPriority}</span>`;
+                    reasonEl.textContent = res.reason;
+                    box.classList.remove('d-none');
+                })
+                .catch(err => console.log('Suggestion error', err));
+        }
+
+        document.getElementById('description').addEventListener('input', function() {
+            updateCharCount();
+            clearTimeout(debounceTimer);
+            const text = this.value;
+            debounceTimer = setTimeout(() => analyzePriority(text), 300);
+        });
+
+        document.getElementById('applySuggestedPriorityBtn').addEventListener('click', function() {
+            if (currentSuggestedPriority) {
+                document.getElementById('priority').value = currentSuggestedPriority;
+                showToast(`Priority set to ${currentSuggestedPriority}`, 'info');
+            }
+        });
+
+        // Photo Attachment Drag & Drop / Preview
+        const dropZone = document.getElementById('dropZone');
+        const photoInput = document.getElementById('photoInput');
+        const dropZonePrompt = document.getElementById('dropZonePrompt');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const imageFileName = document.getElementById('imageFileName');
+
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
+            photoInput.click();
+        });
+
+        photoInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#4f46e5';
+            dropZone.style.backgroundColor = '#eef2ff';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#cbd5e1';
+            dropZone.style.backgroundColor = '#f8fafc';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#cbd5e1';
+            dropZone.style.backgroundColor = '#f8fafc';
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        function handleFiles(files) {
+            if (!files || files.length === 0) return;
+            const file = files[0];
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select a valid image file', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imageFileName.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                dropZonePrompt.classList.add('d-none');
+                previewContainer.classList.remove('d-none');
+                showToast('Photo attached successfully', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage(e) {
+            e.stopPropagation();
+            photoInput.value = '';
+            imagePreview.src = '';
+            previewContainer.classList.add('d-none');
+            dropZonePrompt.classList.remove('d-none');
+        }
+
+        // Submit Service Request
+        document.getElementById('createRequestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value.trim();
+            const category = document.getElementById('category').value;
+            const location = document.getElementById('location').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const priority = document.getElementById('priority').value;
+
+            const btnSpinner = document.getElementById('btnSpinner');
+            const btnText = document.getElementById('btnText');
+            const submitBtn = document.getElementById('submitBtn');
+
+            btnSpinner.classList.remove('d-none');
+            btnText.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await ApiClient.post(`/requests?userId=${currentUser.id}`, {
+                    title, category, location, description, priority
+                });
+
+                showToast(`Service request ${response.ticketId} created successfully!`, 'success');
+
+                setTimeout(() => {
+                    window.location.href = `request-details.html?id=${response.id}`;
+                }, 1000);
+
+            } catch (err) {
+                showToast(err.message || 'Failed to create request', 'error');
+                btnSpinner.classList.add('d-none');
+                btnText.textContent = 'Submit Service Request';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

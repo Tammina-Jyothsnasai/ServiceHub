@@ -1,0 +1,69 @@
+-- ServiceHub Database Schema for MySQL 8.0
+
+CREATE DATABASE IF NOT EXISTS servicehub_db;
+USE servicehub_db;
+
+-- 1. Users Table
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'USER',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Staff Table
+CREATE TABLE IF NOT EXISTS staff (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    department VARCHAR(100) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Service Requests Table
+CREATE TABLE IF NOT EXISTS service_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    ticket_id VARCHAR(50) NOT NULL UNIQUE,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    priority VARCHAR(50) NOT NULL DEFAULT 'MEDIUM',
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    location VARCHAR(255) NOT NULL,
+    assigned_staff_id BIGINT DEFAULT NULL,
+    resolution_notes TEXT DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    resolved_at DATETIME DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_staff_id) REFERENCES staff(id) ON DELETE SET NULL
+);
+
+-- 4. Feedback Table
+CREATE TABLE IF NOT EXISTS feedback (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    request_id BIGINT NOT NULL UNIQUE,
+    user_id BIGINT NOT NULL,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (request_id) REFERENCES service_requests(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 5. Notifications Table
+CREATE TABLE IF NOT EXISTS notifications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    request_id BIGINT DEFAULT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (request_id) REFERENCES service_requests(id) ON DELETE SET NULL
+);
